@@ -8,3 +8,4 @@ class MyUserViewSet(viewsets.ModelViewSet):
     """Операции над пользователем."""
     queryset = MyUser.objects.all()
     serializer_class = serializers.MyUserSerializer
+    lookup_field = 'username'
