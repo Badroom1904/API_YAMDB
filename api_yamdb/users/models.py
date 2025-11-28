@@ -11,6 +11,7 @@ ROLE_CHOICES = [
 
 class MyUser(AbstractUser):
     """Кастомная модель пользователя."""
+    email = models.EmailField('Email адрес', unique=True, blank=False)
     role = models.CharField(
         'Роль',
         max_length=10,
