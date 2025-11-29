@@ -118,7 +118,7 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 # Настройки DRF
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated', 
+        'api.permissions.OnlyAdmin',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
