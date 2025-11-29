@@ -1,5 +1,4 @@
-from rest_framework import response, views, viewsets
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework import permissions, generics, viewsets
 
 from . import serializers
 from users.models import MyUser
@@ -12,8 +11,8 @@ class MyUserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
 
 
-class AuthViewSet(viewsets.ModelViewSet):
+class AuthCreateView(generics.CreateAPIView):
+    """Создание пользователя."""
     queryset = MyUser.objects.all()
     serializer_class = serializers.AuthSerializer
-    http_method_names = ['post', 'patch']
-
+    permission_classes = [permissions.AllowAny]
