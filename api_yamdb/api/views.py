@@ -11,10 +11,10 @@ class MyUserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
 
 
-class AuthViewSet(viewsets.ModelViewSet):
+class AuthCreateView(generics.CreateAPIView):
+    """Создание пользователя."""
     queryset = MyUser.objects.all()
     serializer_class = serializers.AuthSerializer
-    http_method_names = ['post', 'patch']
     permission_classes = [permissions.AllowAny]
 
 
