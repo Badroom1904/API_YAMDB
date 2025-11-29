@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -113,3 +114,21 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 # Указываем директорию, в которую будут сохраняться файлы писем:
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+# Настройки DRF
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated', 
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+# Настройки JWT токена
+SIMPLE_JWT = {
+    # Устанавливаем срок жизни токена
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
