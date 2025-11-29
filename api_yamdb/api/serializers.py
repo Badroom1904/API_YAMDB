@@ -17,7 +17,6 @@ class MyUserSerializer(serializers.ModelSerializer):
 
         user = MyUser.objects.create(**validated_data)
         user.set_unusable_password()  # Ставим пустой пароль.
-        user.save()
         return user
 
 
@@ -31,7 +30,7 @@ class AuthSerializer(serializers.ModelSerializer):
         user = MyUser.objects.create(**validated_data)
         user.set_unusable_password()
         send_mail(
-            subject='Регистрация пользователя',
+            subject='User registration',
             message=f'Код доступа: {user.confirmation_code}',
             from_email='yamdb@example.com',
             recipient_list=[user.email],
