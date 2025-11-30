@@ -8,9 +8,6 @@ from users.models import MyUser
 
 class BaseSerializer(serializers.ModelSerializer):
     """Базовый сериализатор."""
-    class Meta:
-        model = MyUser
-
     def validate_username(self, value):
         """Валидация username при создании и обновлении."""
 
@@ -48,6 +45,7 @@ class BaseSerializer(serializers.ModelSerializer):
 class MyUserSerializer(BaseSerializer):
     """Настройки выдачи пользователей."""
     class Meta:
+        model = MyUser
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
@@ -56,6 +54,7 @@ class MyUserSerializer(BaseSerializer):
 class AuthSerializer(BaseSerializer):
     """Настройки выдачи при регистрации."""
     class Meta:
+        model = MyUser
         fields = ('username', 'email')
 
 
