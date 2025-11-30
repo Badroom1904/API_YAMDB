@@ -1,6 +1,6 @@
 from rest_framework import (
     decorators, filters, permissions,
-    response, status, generics, views, viewsets
+    response, status, views, viewsets
 )
 
 from .permissions import AdminOrMeOnly
@@ -54,7 +54,7 @@ class AuthView(views.APIView):
         )
 
 
-class CreateTokenView(views.APIView):
+class TokenView(views.APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
