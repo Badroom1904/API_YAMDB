@@ -4,14 +4,13 @@ from rest_framework import (
 )
 
 from .permissions import AdminOrMeOnly
-from . import serializers
-from users.models import MyUser
+from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer
 
 
-class MyUserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """Операции над пользователем (Admin)."""
-    queryset = MyUser.objects.all()
-    serializer_class = serializers.MyUserSerializer
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
@@ -43,7 +42,7 @@ class AuthView(views.APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = serializers.AuthSerializer(data=request.data)
+        serializer = AuthSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return response.Response(
@@ -58,7 +57,7 @@ class TokenView(views.APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = serializers.TokenSerializer(data=request.data)
+        serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
             return response.Response(
                 serializer.validated_data, status=status.HTTP_200_OK

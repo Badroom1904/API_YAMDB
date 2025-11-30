@@ -1,9 +1,11 @@
 from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
-from users.models import MyUser
+
+User = get_user_model()
 
 
 class BaseSerializer(serializers.ModelSerializer):
@@ -29,7 +31,7 @@ class BaseSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Создание пользователя и отправка письма."""
 
-        user = MyUser.objects.create(**validated_data)
+        user = User.objects.create(**validated_data)
         user.set_unusable_password()
         user.save()
         send_mail(
@@ -42,10 +44,10 @@ class BaseSerializer(serializers.ModelSerializer):
         return user
 
 
-class MyUserSerializer(BaseSerializer):
+class UserSerializer(BaseSerializer):
     """Настройки выдачи пользователей."""
     class Meta:
-        model = MyUser
+        model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
@@ -54,7 +56,7 @@ class MyUserSerializer(BaseSerializer):
 class AuthSerializer(BaseSerializer):
     """Настройки выдачи при регистрации."""
     class Meta:
-        model = MyUser
+        model = User
         fields = ('username', 'email')
 
 
@@ -66,7 +68,7 @@ class TokenSerializer(serializers.Serializer):
     def validate(self, attrs):
         """Валидация и выдача токена."""
 
-        user = get_object_or_404(MyUser, username=attrs.get('username'))
+        user = get_object_or_404(User, username=attrs.get('username'))
         if user.confirmation_code != attrs.get('confirmation_code'):
             raise serializers.ValidationError('Неверный код подтверждения.')
         access_token = AccessToken.for_user(user)
