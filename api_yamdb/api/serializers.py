@@ -14,11 +14,34 @@ class MyUserSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
 
+    def validate_username(self, value):
+        """Валидация username при создании и обновлении."""
+
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Использовать имя "me" в качестве username запрещено'
+            )
+        return value
+
+    def validate_role(self, value):
+        """Валидация role на изменение."""
+
+        if self.context.get('request').user.role != 'admin':
+            raise serializers.ValidationError(
+                'Только администратор может менять роли.'
+            )
+        return value
+
     def create(self, validated_data):
         """Валидируем создание пользователя."""
 
         user = MyUser.objects.create(**validated_data)
-        user.set_unusable_password()  # Ставим пустой пароль.
+        user.set_unusable_password()
+        user.save()
+        if validated_data['username'].lower() == 'me':
+            raise serializers.ValidationError(
+                'Использовать имя "me" в качестве username запрещено'
+            )
         return user
 
 
@@ -28,24 +51,19 @@ class AuthSerializer(serializers.ModelSerializer):
         model = MyUser
         fields = ('username', 'email')
 
-    def create(self, validated_data):
-        user = MyUser.objects.create(**validated_data)
-        user.set_unusable_password()
-        send_mail(
-            subject='User registration',
-            message=f'Код доступа: {user.confirmation_code}',
-            from_email='yamdb@example.com',
-            recipient_list=[user.email],
-            fail_silently=True,
-        )
-        return user
-
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(
                 'Использовать имя "me" в качестве username запрещено'
             )
         return value
+
+    def create(self, validated_data):
+        """Создание пользователя с unusable password."""
+        user = MyUser.objects.create(**validated_data)
+        user.set_unusable_password()
+        user.save()
+        return user
 
 
 class TokenSerializer(serializers.Serializer):
@@ -54,24 +72,8 @@ class TokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField()
 
     def validate(self, attrs):
-        """Сверяем код и выдаем токен."""
-
         user = get_object_or_404(MyUser, username=attrs.get('username'))
         if user.confirmation_code != attrs.get('confirmation_code'):
-            raise serializers.ValidationError(
-                'Неверный код подтверждения.'
-            )
-        self.context['token'] = AccessToken.for_user(user)
-        return attrs
-
-    def to_representation(self, instance):
-        """Переопределяем выдачу."""
-
-        return {
-            'token': str(self.context['token'])
-        }
-
-    def create(self, validated_data):
-        """Создаем метод для работы дженериков."""
-
-        return validated_data
+            raise serializers.ValidationError('Неверный код подтверждения.')
+        access_token = AccessToken.for_user(user)
+        return {'token': str(access_token)}
