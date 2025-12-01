@@ -8,7 +8,7 @@ from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """Операции над пользователем (Admin)."""
+    """Вьюсет для работы с пользователями."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
@@ -21,6 +21,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @decorators.action(detail=False, methods=['get', 'patch'])
     def me(self, request):
+        """Обработка запросов просмотра или редактирование своего профиля."""
+
         if request.method == 'GET':
             serializer = self.get_serializer(request.user)
             return response.Response(serializer.data)
@@ -36,10 +38,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class AuthView(views.APIView):
-    """Создание пользователя."""
+    """Функция для регистрации пользователя."""
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        """Обработка запросов на создание пользователя."""
+
         serializer = AuthSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -52,9 +56,12 @@ class AuthView(views.APIView):
 
 
 class TokenView(views.APIView):
+    """Функция для работы с токеном."""
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        """Обработка запросов на создание токена."""
+
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
             return response.Response(
