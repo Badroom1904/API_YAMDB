@@ -23,9 +23,7 @@ class BaseSerializer(serializers.ModelSerializer):
         """Валидация role на изменение."""
 
         if self.context.get('request').user.role != 'admin':
-            raise serializers.ValidationError(
-                'Только администратор может менять роли.'
-            )
+            return self.instance.role
         return value
 
     def create(self, validated_data):

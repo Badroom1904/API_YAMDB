@@ -25,8 +25,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(request.user)
             return response.Response(serializer.data)
         elif request.method == 'PATCH':
-            if request.data.get('role'):
-                request.data.pop('role')
             serializer = self.get_serializer(
                 request.user,
                 data=request.data,
