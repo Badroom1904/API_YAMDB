@@ -1,24 +1,65 @@
-from rest_framework import permissions, generics, viewsets
+from rest_framework import (
+    decorators, filters, permissions,
+    response, status, views, viewsets
+)
 
-from . import serializers
-from users.models import MyUser
+from .permissions import AdminOrMeOnly
+from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer
 
 
-class MyUserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """Операции над пользователем (Admin)."""
-    queryset = MyUser.objects.all()
-    serializer_class = serializers.MyUserSerializer
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    permission_classes = [AdminOrMeOnly]
+    http_method_names = [
+        'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
+    ]
+
+    @decorators.action(detail=False, methods=['get', 'patch'])
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = self.get_serializer(request.user)
+            return response.Response(serializer.data)
+        elif request.method == 'PATCH':
+            serializer = self.get_serializer(
+                request.user,
+                data=request.data,
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return response.Response(serializer.data)
 
 
-class AuthCreateView(generics.CreateAPIView):
+class AuthView(views.APIView):
     """Создание пользователя."""
-    queryset = MyUser.objects.all()
-    serializer_class = serializers.AuthSerializer
     permission_classes = [permissions.AllowAny]
 
+    def post(self, request):
+        serializer = AuthSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(
+                serializer.validated_data, status=status.HTTP_200_OK
+            )
+        return response.Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
-class CreateTokenView(generics.CreateAPIView):
-    """Создаем токен."""
+
+class TokenView(views.APIView):
     permission_classes = [permissions.AllowAny]
-    serializer_class = serializers.TokenSerializer
+
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
+        if serializer.is_valid():
+            return response.Response(
+                serializer.validated_data, status=status.HTTP_200_OK
+            )
+        return response.Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )

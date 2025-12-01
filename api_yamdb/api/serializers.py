@@ -1,51 +1,62 @@
 from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
-from users.models import MyUser
+
+User = get_user_model()
 
 
-class MyUserSerializer(serializers.ModelSerializer):
-    """Настройки выдачи пользователей."""
-    class Meta:
-        model = MyUser
-        fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
-        )
-
-    def create(self, validated_data):
-        """Валидируем создание пользователя."""
-
-        user = MyUser.objects.create(**validated_data)
-        user.set_unusable_password()  # Ставим пустой пароль.
-        return user
-
-
-class AuthSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = MyUser
-        fields = ('username', 'email')
-
-    def create(self, validated_data):
-        user = MyUser.objects.create(**validated_data)
-        user.set_unusable_password()
-        send_mail(
-            subject='User registration',
-            message=f'Код доступа: {user.confirmation_code}',
-            from_email='yamdb@example.com',
-            recipient_list=[user.email],
-            fail_silently=True,
-        )
-        return user
-
+class BaseSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор."""
     def validate_username(self, value):
+        """Валидация username при создании и обновлении."""
+
         if value == 'me':
             raise serializers.ValidationError(
                 'Использовать имя "me" в качестве username запрещено'
             )
         return value
+
+    def validate_role(self, value):
+        """Валидация role на изменение."""
+
+        if self.context.get('request').user.role != 'admin':
+            return self.instance.role
+        return value
+
+    def create(self, validated_data):
+        """Создание пользователя и отправка письма."""
+
+        user = User.objects.create(**validated_data)
+        user.set_unusable_password()
+        user.generate_confirmation_code()
+        send_mail(
+            subject='Верификация',
+            message=f'Код доступа: {user.confirmation_code}',
+            from_email='yamdb@example.com',
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+        user.save()
+        return user
+
+
+class UserSerializer(BaseSerializer):
+    """Настройки выдачи пользователей."""
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
+
+
+class AuthSerializer(BaseSerializer):
+    """Настройки выдачи при регистрации."""
+    class Meta:
+        model = User
+        fields = ('username', 'email')
 
 
 class TokenSerializer(serializers.Serializer):
@@ -54,24 +65,10 @@ class TokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField()
 
     def validate(self, attrs):
-        """Сверяем код и выдаем токен."""
+        """Валидация и выдача токена."""
 
-        user = get_object_or_404(MyUser, username=attrs.get('username'))
+        user = get_object_or_404(User, username=attrs.get('username'))
         if user.confirmation_code != attrs.get('confirmation_code'):
-            raise serializers.ValidationError(
-                'Неверный код подтверждения.'
-            )
-        self.context['token'] = AccessToken.for_user(user)
-        return attrs
-
-    def to_representation(self, instance):
-        """Переопределяем выдачу."""
-
-        return {
-            'token': str(self.context['token'])
-        }
-
-    def create(self, validated_data):
-        """Создаем метод для работы дженериков."""
-
-        return validated_data
+            raise serializers.ValidationError('Неверный код подтверждения.')
+        access_token = AccessToken.for_user(user)
+        return {'token': str(access_token)}
