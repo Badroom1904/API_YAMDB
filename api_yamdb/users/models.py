@@ -26,12 +26,11 @@ class MyUser(AbstractUser):
     def generate_confirmation_code(self):
         """Сгенерировать новый код подтверждения."""
 
-        return str(randint(100000, 999999))
+        self.confirmation_code = str(randint(100000, 999999))
 
     def save(self, *args, **kwargs):
         """Сохраняем суперпользователя и генерируем код."""
 
         if self.is_superuser and self.role != 'admin':
             self.role = 'admin'
-        self.confirmation_code = self.generate_confirmation_code()
         super().save(*args, **kwargs)

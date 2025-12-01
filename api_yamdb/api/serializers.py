@@ -31,7 +31,7 @@ class BaseSerializer(serializers.ModelSerializer):
 
         user = User.objects.create(**validated_data)
         user.set_unusable_password()
-        user.save()
+        user.generate_confirmation_code()
         send_mail(
             subject='Верификация',
             message=f'Код доступа: {user.confirmation_code}',
@@ -39,6 +39,7 @@ class BaseSerializer(serializers.ModelSerializer):
             recipient_list=[user.email],
             fail_silently=True,
         )
+        user.save()
         return user
 
 
