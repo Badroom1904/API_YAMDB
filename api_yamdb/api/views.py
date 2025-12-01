@@ -16,3 +16,9 @@ class AuthCreateView(generics.CreateAPIView):
     queryset = MyUser.objects.all()
     serializer_class = serializers.AuthSerializer
     permission_classes = [permissions.AllowAny]
+
+
+class CreateTokenView(generics.CreateAPIView):
+    """Создаем токен."""
+    permission_classes = [permissions.AllowAny]
+    serializer_class = serializers.TokenSerializer
