@@ -14,4 +14,13 @@ extra_patterns = [
 
 urlpatterns = [
     path('v1/', include(extra_patterns))
+from .views import CategoryViewSet, GenreViewSet, TitleViewSet
+
+router = DefaultRouter()
+router.register('categories', CategoryViewSet, basename='categories')
+router.register('genres', GenreViewSet, basename='genres')
+router.register('titles', TitleViewSet, basename='titles')
+
+urlpatterns = [
+    path('', include(router.urls)),
 ]
