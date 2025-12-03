@@ -1,10 +1,13 @@
 from rest_framework import (
     decorators, filters, permissions,
-    response, status, views, viewsets
+    response, status, views, viewsets, mixins
 )
 
-from .permissions import AdminOrMeOnly
-from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer
+from .permissions import AdminOrMeOnly, IsAdminOrReadOnly
+from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer, CategorySerializer, GenreSerializer, TitleReadSerializer, TitleWriteSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from reviews.models import Category, Genre, Title
+from .filters import TitleFilter
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -15,9 +18,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     permission_classes = [AdminOrMeOnly]
-    http_method_names = [
-        'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
-    ]
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @decorators.action(detail=False, methods=['get', 'patch'])
     def me(self, request):
@@ -71,34 +72,8 @@ class TokenView(views.APIView):
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
 
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets
 
-
-from reviews.models import Category, Genre, Title
-from .filters import TitleFilter
-from .permissions import IsAdminOrReadOnly
-from .serializers import (
-    CategorySerializer, GenreSerializer,
-    TitleReadSerializer, TitleWriteSerializer
-)
-
-
-class CreateListDestroyViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    """
-    Кастомный ViewSet, который предоставляет только действия:
-    create, list, destroy.
-    Используется для категорий и жанров.
-    """
-    pass
-
-
-class CategoryViewSet(CreateListDestroyViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     """ViewSet для категорий."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -106,9 +81,10 @@ class CategoryViewSet(CreateListDestroyViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    http_method_names = ['get', 'post', 'delete']
 
 
-class GenreViewSet(CreateListDestroyViewSet):
+class GenreViewSet(viewsets.ModelViewSet):
     """ViewSet для жанров."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -116,6 +92,7 @@ class GenreViewSet(CreateListDestroyViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    http_method_names = ['get', 'post', 'delete']
 
 
 class TitleViewSet(viewsets.ModelViewSet):

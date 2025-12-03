@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Genre, Title
 
 
 User = get_user_model()
@@ -72,66 +73,24 @@ class TokenSerializer(serializers.Serializer):
             raise serializers.ValidationError('Неверный код подтверждения.')
         access_token = AccessToken.for_user(user)
         return {'token': str(access_token)}
-from rest_framework import serializers
-from reviews.models import Category, Genre, Title
 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категорий."""
     class Meta:
         model = Category
-        fields = ('name', 'slug')
-        lookup_field = 'slug'
+        exclude = ('id',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор для жанров."""
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
-        lookup_field = 'slug'
+        exclude = ('id',)
 
 
-class TitleReadSerializer(serializers.ModelSerializer):
-    """Сериализатор для чтения произведений (с вложенными объектами)."""
-    genre = GenreSerializer(many=True, read_only=True)
-    category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
+class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:
         model = Title
-        fields = (
-            'id', 'name', 'year', 'rating',
-            'description', 'genre', 'category'
-        )
-
-
-class TitleWriteSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания/обновления произведений (со slug)."""
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-        allow_null=True
-    )
-
-    class Meta:
-        model = Title
-        fields = ('name', 'year', 'description', 'genre', 'category')
-
-    def validate_year(self, value):
-        from django.utils import timezone
-        current_year = timezone.now().year
-        if value > current_year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего.'
-            )
-        return value
-
-    def to_representation(self, instance):
-        """При выводе используем сериализатор для чтения."""
-        return TitleReadSerializer(instance).data
