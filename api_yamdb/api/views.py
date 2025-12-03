@@ -1,8 +1,8 @@
 from random import randint
 
 from django.core.mail import send_mail
-from django.db.models import Avg
 from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
@@ -31,11 +31,10 @@ class AuthView(views.APIView):
     def post(self, request):
         serializer = AuthSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
 
-        # Проверяем, существует ли пользователь
         try:
             user, created = User.objects.get_or_create(
                 username=username,
@@ -43,16 +42,19 @@ class AuthView(views.APIView):
             )
         except IntegrityError:
             return response.Response(
-                {'error': 'Пользователь с таким email или username уже существует'},
+                {
+                    'error': (
+                        'Пользователь с таким email или '
+                        'username уже существует'
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Генерируем код
         confirmation_code = str(randint(100000, 999999))
         user.confirmation_code = confirmation_code
         user.save()
 
-        # Отправляем письмо
         send_mail(
             subject='Код подтверждения Yamdb',
             message=f'Ваш код подтверждения: {confirmation_code}',
@@ -70,10 +72,10 @@ class TokenView(views.APIView):
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         username = serializer.validated_data.get('username')
         confirmation_code = serializer.validated_data.get('confirmation_code')
-        
+
         user = get_object_or_404(User, username=username)
 
         if user.confirmation_code != confirmation_code:
@@ -83,7 +85,8 @@ class TokenView(views.APIView):
             )
 
         token = AccessToken.for_user(user)
-        return response.Response({'token': str(token)}, status=status.HTTP_200_OK)
+        return response.Response({'token': str(token)},
+                                 status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -107,7 +110,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             serializer = self.get_serializer(request.user)
             return response.Response(serializer.data)
-        
+
         if request.method == 'PATCH':
             serializer = self.get_serializer(
                 request.user,
@@ -115,9 +118,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 partial=True
             )
             serializer.is_valid(raise_exception=True)
-            # Пользователь не может менять свою роль
             if 'role' in serializer.validated_data:
-                 serializer.validated_data.pop('role')
+                serializer.validated_data.pop('role')
             serializer.save()
             return response.Response(serializer.data)
 
@@ -159,6 +161,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
         if self.action in ('create', 'update', 'partial_update'):
@@ -169,6 +172,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -182,6 +186,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))

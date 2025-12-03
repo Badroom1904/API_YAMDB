@@ -19,7 +19,8 @@ class MyUser(AbstractUser):
         default='user'
     )
     bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.CharField('Код подтверждения', max_length=6, blank=True)
+    confirmation_code = models.CharField('Код подтверждения', max_length=6,
+                                         blank=True)
 
     @property
     def is_admin(self):

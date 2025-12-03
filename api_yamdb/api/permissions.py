@@ -10,10 +10,8 @@ class OnlyAdmin(permissions.BasePermission):
 class AdminOrMeOnly(permissions.BasePermission):
     """Только админ и зарегестрированный пользователь для /me."""
     def has_permission(self, request, view):
-        # Если это доступ к users/me, то пускаем аутентифицированных
         if view.action == 'me':
             return request.user.is_authenticated
-        # Иначе - только админ
         return (
             request.user.is_authenticated
             and request.user.is_admin

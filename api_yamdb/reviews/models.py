@@ -105,14 +105,6 @@ class Title(models.Model):
     def __str__(self):
         return f'{self.name} ({self.year})'
 
-    @property
-    def rating(self):
-        """Средний рейтинг произведения на основе отзывов."""
-        reviews = self.reviews.all()
-        if not reviews:
-            return None
-        return sum(review.score for review in reviews) // len(reviews)
-
 
 class GenreTitle(models.Model):
     title = models.ForeignKey(

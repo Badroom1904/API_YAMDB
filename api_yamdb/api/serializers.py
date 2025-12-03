@@ -1,7 +1,7 @@
+import re
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Title, Review, Comment
 
@@ -21,6 +21,8 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Использовать имя "me" в качестве username запрещено'
             )
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError('Некорректный формат username')
         return value
 
 
@@ -34,6 +36,8 @@ class AuthSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Использовать имя "me" в качестве username запрещено'
             )
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError('Некорректный формат username')
         return value
 
 
