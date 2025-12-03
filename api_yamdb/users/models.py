@@ -1,5 +1,3 @@
-from random import randint
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -21,16 +19,20 @@ class MyUser(AbstractUser):
         default='user'
     )
     bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.CharField('Код подтверждения', max_length=6)
+    confirmation_code = models.CharField('Код подтверждения', max_length=6, blank=True)
 
-    def generate_confirmation_code(self):
-        """Сгенерировать новый код подтверждения."""
+    @property
+    def is_admin(self):
+        return self.role == 'admin' or self.is_superuser
 
-        self.confirmation_code = str(randint(100000, 999999))
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
 
-    def save(self, *args, **kwargs):
-        """Сохраняем суперпользователя и генерируем код."""
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
-        if self.is_superuser and self.role != 'admin':
-            self.role = 'admin'
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return self.username
