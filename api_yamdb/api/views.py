@@ -4,7 +4,7 @@ from rest_framework import (
 )
 
 from .permissions import AdminOrMeOnly, IsAdminOrReadOnly
-from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer, CategorySerializer, GenreSerializer, TitleReadSerializer, TitleWriteSerializer
+from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer, CategorySerializer, GenreSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from reviews.models import Category, Genre, Title
 from .filters import TitleFilter
@@ -102,7 +102,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
-    def get_serializer_class(self):
-        if self.action in ('create', 'update', 'partial_update'):
-            return TitleWriteSerializer
-        return TitleReadSerializer
+    # def get_serializer_class(self):
+    #     if self.action in ('create', 'update', 'partial_update'):
+    #         return TitleWriteSerializer
+    #     return TitleReadSerializer
