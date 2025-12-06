@@ -10,7 +10,7 @@ User = get_user_model()
 
 
 class BaseSerializer(serializers.ModelSerializer):
-    """Базовый сериализатор."""
+    """Базовый сериализатор операций над пользователями."""
     def validate_username(self, value):
         """Валидация username при создании и обновлении."""
 
