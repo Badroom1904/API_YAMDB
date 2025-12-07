@@ -4,7 +4,8 @@ from rest_framework import (
 )
 
 from .permissions import AdminOrMeOnly, IsAdminOrReadOnly
-from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer, CategorySerializer, GenreSerializer
+from .serializers import AuthSerializer, TokenSerializer, User, UserSerializer, \
+    CategorySerializer, GenreSerializer, TitleSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from reviews.models import Category, Genre, Title
 from .filters import TitleFilter
@@ -72,37 +73,33 @@ class TokenView(views.APIView):
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
 
+class CategoryAndGenreBase(viewsets.ModelViewSet):
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    http_method_names = ['get', 'post', 'delete']
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CategoryAndGenreBase):
     """ViewSet для категорий."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    http_method_names = ['get', 'post', 'delete']
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CategoryAndGenreBase):
     """ViewSet для жанров."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    http_method_names = ['get', 'post', 'delete']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """ViewSet для произведений."""
     queryset = Title.objects.all()
+    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
-    # def get_serializer_class(self):
-    #     if self.action in ('create', 'update', 'partial_update'):
-    #         return TitleWriteSerializer
-    #     return TitleReadSerializer
+
+

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -5,12 +7,12 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
-
 User = get_user_model()
 
 
 class BaseSerializer(serializers.ModelSerializer):
     """Базовый сериализатор операций над пользователями."""
+
     def validate_username(self, value):
         """Валидация username при создании и обновлении."""
 
@@ -46,6 +48,7 @@ class BaseSerializer(serializers.ModelSerializer):
 
 class UserSerializer(BaseSerializer):
     """Настройки выдачи пользователей."""
+
     class Meta:
         model = User
         fields = (
@@ -55,6 +58,7 @@ class UserSerializer(BaseSerializer):
 
 class AuthSerializer(BaseSerializer):
     """Настройки выдачи при регистрации."""
+
     class Meta:
         model = User
         fields = ('username', 'email')
@@ -77,6 +81,7 @@ class TokenSerializer(serializers.Serializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категорий."""
+
     class Meta:
         model = Category
         exclude = ('id',)
@@ -84,13 +89,49 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор для жанров."""
+
     class Meta:
         model = Genre
         exclude = ('id',)
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.SerializerMethodField()
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+    )
 
     class Meta:
         model = Title
+        fields = '__all__'
+
+    def get_rating(self, obj):
+        return 0
+
+    def validate_category(self, value):
+        if not value:
+            raise serializers.ValidationError('Укажите категорию.')
+        return value
+
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError('Укажите хотя бы один жанр.')
+        return value
+
+    def validate_year(self, value):
+        if value > datetime.now().year:
+            raise serializers.ValidationError(
+                'Год выпуска не может быть больше текущего.')
+        return value
+
+    def to_representation(self, instance):
+        title = super().to_representation(instance)
+        title['category'] = CategorySerializer(instance.category).data
+        title['genre'] = GenreSerializer(instance.genre.all(), many=True).data
+        return title

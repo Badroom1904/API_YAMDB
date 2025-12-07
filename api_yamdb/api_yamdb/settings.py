@@ -90,14 +90,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-}
-
 # Internationalization
 
 LANGUAGE_CODE = 'ru'
@@ -131,7 +123,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'api.permissions.OnlyAdmin',
     ],
-
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -142,6 +133,6 @@ REST_FRAMEWORK = {
 # Настройки JWT токена
 SIMPLE_JWT = {
     # Устанавливаем срок жизни токена
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=100),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
