@@ -4,6 +4,14 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+# ===============================
+# Constants
+# ===============================
+
+CURRENT_YEAR = timezone.now().year
+MIN_SCORE = 1
+MAX_SCORE = 10
+
 
 class Category(models.Model):
     name = models.CharField(
@@ -61,7 +69,7 @@ class Title(models.Model):
         _('Год выпуска'),
         validators=[
             MaxValueValidator(
-                timezone.now().year,
+                CURRENT_YEAR,
                 message=_('Год выпуска не может быть больше текущего.')
             )
         ],
@@ -84,7 +92,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle',
         related_name='titles',
         verbose_name=_('Жанры'),
         blank=True,
@@ -106,34 +113,6 @@ class Title(models.Model):
         return f'{self.name} ({self.year})'
 
 
-class GenreTitle(models.Model):
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        verbose_name=_('Произведение'),
-        related_name='genre_titles'
-    )
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE,
-        verbose_name=_('Жанр'),
-        related_name='genre_titles'
-    )
-
-    class Meta:
-        verbose_name = _('Связь жанра и произведения')
-        verbose_name_plural = _('Связи жанров и произведений')
-        constraints = [
-            models.UniqueConstraint(
-                fields=['title', 'genre'],
-                name='unique_genre_title'
-            )
-        ]
-
-    def __str__(self):
-        return f'{self.title} - {self.genre}'
-
-
 class Review(models.Model):
     title = models.ForeignKey(
         Title,
@@ -150,8 +129,8 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1, 'Оценка не может быть меньше 1'),
-            MaxValueValidator(10, 'Оценка не может быть выше 10')
+            MinValueValidator(MIN_SCORE, 'Оценка не может быть меньше 1'),
+            MaxValueValidator(MAX_SCORE, 'Оценка не может быть выше 10')
         ],
         verbose_name=_('Оценка')
     )
