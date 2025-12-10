@@ -9,7 +9,7 @@ class OnlyAdmin(permissions.BasePermission):
 
 
 class AdminOrMeOnly(permissions.BasePermission):
-    """Allows access to /me for authenticated users and to others for admins."""
+    """Allows access to /me for authenticated users and others for admins."""
     def has_permission(self, request, view):
         if view.action == 'me':
             return request.user.is_authenticated

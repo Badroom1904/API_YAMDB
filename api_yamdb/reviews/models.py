@@ -4,9 +4,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-# ===============================
-# Constants
-# ===============================
 
 CURRENT_YEAR = timezone.now().year
 MIN_SCORE = 1
