@@ -2,38 +2,53 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-ROLE_CHOICES = [
-    ('user', 'Аутентифицированный пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
-]
+ROLE_USER = 'user'
+ROLE_MODERATOR = 'moderator'
+ROLE_ADMIN = 'admin'
+
+ROLE_CHOICES = (
+    (ROLE_USER, 'Аутентифицированный пользователь'),
+    (ROLE_MODERATOR, 'Модератор'),
+    (ROLE_ADMIN, 'Администратор'),
+)
+
+CONFIRMATION_CODE_LENGTH = 6
+ROLE_MAX_LENGTH = 10
 
 
-class MyUser(AbstractUser):
-    """Кастомная модель пользователя."""
-    email = models.EmailField('Email адрес', unique=True, blank=False)
+class User(AbstractUser):
+    """Custom user model."""
+
+    email = models.EmailField(
+        'Email адрес',
+        unique=True,
+        blank=False
+    )
+
     role = models.CharField(
         'Роль',
-        max_length=10,
+        max_length=ROLE_MAX_LENGTH,
         choices=ROLE_CHOICES,
-        default='user'
+        default=ROLE_USER
     )
-    bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.CharField('Код подтверждения', max_length=6,
-                                         blank=True)
+
+    bio = models.TextField(
+        'Биография',
+        blank=True
+    )
+
+    confirmation_code = models.CharField(
+        'Код подтверждения',
+        max_length=CONFIRMATION_CODE_LENGTH,
+        blank=True
+    )
 
     @property
     def is_admin(self):
-        return self.role == 'admin' or self.is_superuser
+        """Return True if user is admin or superuser."""
+        return self.role == ROLE_ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-
-    def __str__(self):
-        return self.username
+        """Return True if user is moderator."""
+        return self.role == ROLE_MODERATOR

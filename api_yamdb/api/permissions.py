@@ -1,14 +1,15 @@
 from rest_framework import permissions
+from users.models import ROLE_ADMIN
 
 
 class OnlyAdmin(permissions.BasePermission):
-    """Только администратор."""
+    """Access restricted to admin users."""
     def has_permission(self, request, view):
-        return request.user.role == 'admin' or request.user.is_superuser
+        return request.user.role == ROLE_ADMIN or request.user.is_superuser
 
 
 class AdminOrMeOnly(permissions.BasePermission):
-    """Только админ и зарегестрированный пользователь для /me."""
+    """Allows access to /me for authenticated users and to others for admins."""
     def has_permission(self, request, view):
         if view.action == 'me':
             return request.user.is_authenticated
@@ -19,10 +20,7 @@ class AdminOrMeOnly(permissions.BasePermission):
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
-    """
-    Админу - всё.
-    Остальным - только чтение (GET, HEAD, OPTIONS).
-    """
+    """Full access for admin, read-only for others."""
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -30,11 +28,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 
 class IsAdminModeratorAuthorOrReadOnly(permissions.BasePermission):
-    """
-    Чтение - всем.
-    Создание - аутентифицированным.
-    Изменение/удаление - Автор, Модератор, Админ.
-    """
+    """Write access for authors, moderators, admins; read access for all."""
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS

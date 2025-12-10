@@ -117,16 +117,13 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
-# Переопределяем базовую модель пользователя
-AUTH_USER_MODEL = 'users.MyUser'
 
-# Подключаем бэкенд filebased.EmailBackend:
+AUTH_USER_MODEL = 'users.User'
+
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
-# Указываем директорию, в которую будут сохраняться файлы писем:
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
-# Настройки DRF
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'api.permissions.OnlyAdmin',
@@ -139,9 +136,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 5,
 }
 
-# Настройки JWT токена
 SIMPLE_JWT = {
-    # Устанавливаем срок жизни токена
+
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
